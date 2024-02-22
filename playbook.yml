@@ -1,0 +1,25 @@
+---
+- name: Install packages on a remote Ubuntu server
+  hosts: all
+  become: yes  # This elevates privileges to run tasks that require sudo
+  vars:
+    packages: "{{ packages_list }}"  # Expecting a list of package names passed as a variable
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600  # Cache is considered valid for 1 hour
+
+    - name: Install specified packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ packages }}"
+      register: result
+
+    - name: Log installation results
+      ansible.builtin.debug:
+        msg: "Installed package {{ item.item }} with result {{ item }}"
+      loop: "{{ result.results }}"
+      when: result is changed
